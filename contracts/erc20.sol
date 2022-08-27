@@ -40,6 +40,11 @@ contract erc20Token is ERC20, ERC20Burnable, Ownable {
       }
   }
 
+  function getErc20Balance(address _addr) public view returns (uint256){
+      return IERC20(address(this)).balanceOf(_addr) / 10**18;
+  }
+
+
   function addController(address controller) external onlyOwner {
     controllers[controller] = true;
   }

@@ -39,7 +39,11 @@ contract ReceiveERC20 is AccessControl, Ownable {
     function payContract() public payable {
         IERC20 paytoken;
         paytoken = erc20Token.paytoken;
-        paytoken.transfer(address(this), erc20Token.cost);
+        paytoken.transfer(address(this), erc20Token.cost / 10**18);
+    }
+
+    function getErc20Token() public view returns (TokenInfo memory) {
+        return erc20Token;
     }
 
     function withdraw() public payable onlyOwner() {
