@@ -16,7 +16,7 @@ async function deployErc20() {
 describe("testing erc20 receiver contract", async function() {
     beforeEach(async function() {
         this.erc20 = await deployErc20();
-        this.contract = await deployErc20Receiver(this.erc20.address, 10 * 10**14);
+        this.contract = await deployErc20Receiver(this.erc20.address, 100);
     });
     it("should deploy contract with correct erc20 tkn address", async function() {
         const erc20Tkn = await this.contract.getErc20Token();
@@ -25,12 +25,53 @@ describe("testing erc20 receiver contract", async function() {
     });
 
     describe("testing payContract function", async function() {
-        it("should pay the contract correctly", async function() {
-            let deployer = await ethers.getSigners();
-            tx = await this.contract.payContract();
-        })
-        
-    })
+       describe("contract is allowed", async function() {
+            beforeEach(async function() {
+                let depl = await ethers.getSigners();
+                this.deployer = depl[0];
+                await this.erc20.approve(this.contract.address, 1000000);
+            });
+            it("should pay the contract correctly", async function() {
+                balanceBefore = await this.erc20.balanceOf(this.deployer.address);
+                tx = await this.contract.payContract();
+                balanceAfter = await this.erc20.balanceOf(this.deployer.address);
+                expect(balanceAfter).to.be.below(balanceBefore);
+            });
+       });
+       
+       describe("contract is not allowed", async function() {
+            it("should revert with insufficiente allowance", async function() {
+                await expect(this.contract.payContract()).to.be.revertedWith("ERC20: insufficient allowance");
+            });
+       });
+    });
 
+    describe("testing withdraw", async function() {
+        beforeEach(async function() {
+            this.erc20 = await deployErc20();
+            this.contract = await deployErc20Receiver(this.erc20.address, 100000);
+            await this.erc20.approve(this.contract.address, 1000000);
+            let depl = await ethers.getSigners();
+            this.deployer = depl[0];
+        });
+        it("should withdraw erc20 correctly", async function() {
+            let contractBalanceBeforePay = await this.erc20.balanceOf(this.contract.address);
+
+            let tx = await this.contract.payContract();
+
+            let contractBalanceAfterPaying = await this.erc20.balanceOf(this.contract.address);
+
+            expect(contractBalanceBeforePay).to.equals(0);
+            expect(contractBalanceAfterPaying).to.be.above(0);
+
+            let deployerBalanceBefore = await this.erc20.balanceOf(this.deployer.address);
+
+            await this.contract.withdraw();
+
+            let deployerBalanceAfter= await this.erc20.balanceOf(this.deployer.address);
+
+            expect(deployerBalanceBefore).to.be.below(deployerBalanceAfter);
+        });
+    });
 });
 
