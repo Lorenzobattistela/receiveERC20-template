@@ -14,8 +14,8 @@ describe("Testing erc20 contract", async function() {
     });
     describe("deploy minted tokens for the owner correctly", async function() {
         it("should mint tokens correctly", async function() {
-            let balance = await this.erc20.getErc20Balance(this.deployer[0].address);
-            expect(Number(balance)).to.equal(1000000);
+            let balance = await this.erc20.balanceOf(this.deployer[0].address);
+            expect(Number(balance) / 10**18).to.equal(1000000);
         });
     });
 });
